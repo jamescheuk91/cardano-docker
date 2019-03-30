@@ -13,13 +13,18 @@ RUN useradd -ms /bin/bash cardano &&\
 
 ADD nginx.conf /etc/nginx/conf.d/
 
+ADD start-cardano-container.sh /home/cardano/cardano-sl/
+RUN chmod a+x /home/cardano/cardano-sl/start-cardano-container.sh
+
+RUN echo "cardano ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
 USER cardano
 ENV USER cardano
-RUN curl https://nixos.org/nix/install | sh
+RUN curl https://nixos.org/releases/nix/nix-2.0.4/install | sh
 WORKDIR /home/cardano/cardano-sl 
-RUN git checkout tags/1.3.0
+RUN git checkout tags/3.0.1
 
 RUN . /home/cardano/.nix-profile/etc/profile.d/nix.sh && \
     nix-build --attr connectScripts.mainnet.wallet --out-link connect-to-mainnet -v 
 
-CMD sudo /usr/sbin/service nginx restart && echo "Docker container ::: Nginx service restarted" & /home/cardano/cardano-sl/connect-to-mainnet
+CMD /home/cardano/cardano-sl/start-cardano-container.sh
